@@ -64,3 +64,16 @@
 
 **Blockers**: MainScene.ts exceeds 500-line limit - needs refactoring into sub-components in a future session
 
+
+### Session: 2026-03-03 18:50 - Spec sync: F-0011 to F-0015
+
+**Why**: Spec drift: features shipped without being registered
+
+**Accomplished**:
+- Registered 5 new features (CO2 panel, species selector, age toggle, one-tree-per-cell, MainScene refactor); marked F-0009 shipped; created migration 002
+
+**Next steps**:
+- Merge PR #4; refactor MainScene.ts (F-0015); write unit tests for CO2Calculator and IsometricUtils
+
+**Blockers**: MainScene.ts at ~700 lines keeps blocking SKIP_COMPLEXITY — F-0015 refactor is high priority
+

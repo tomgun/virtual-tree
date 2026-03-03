@@ -172,17 +172,17 @@
 - Dependencies: F-0002
 - Complexity: S
 - Tags: [ui, responsive]
-- Status: in_progress
+- Status: shipped
 - Acceptance: spec/acceptance/F-0009.md
 - Verification:
   - Accepted: no
 - Implementation:
-  - State: partial
-  - Code: src/scenes/MainScene.ts (repositionUI, scale resize listener)
+  - State: complete
+  - Code: src/scenes/MainScene.ts (repositionUI, scale.on resize, repositionUI helper)
 - Tests:
   - Test strategy: manual
   - Unit: n/a
-  - Acceptance: todo
+  - Acceptance: partial
 
 ## F-0010: Mobile / Touch Support
 - Parent: F-0009
@@ -192,6 +192,87 @@
 - Priority: medium
 - Status: planned
 - Acceptance: spec/acceptance/F-0010.md
+- Implementation:
+  - State: none
+- Tests:
+  - Unit: todo
+
+## F-0011: CO₂ Impact Info Panel
+- Parent: F-0005
+- Dependencies: F-0005
+- Complexity: S
+- Tags: [game, ui, co2, education]
+- Status: shipped
+- Acceptance: spec/acceptance/F-0011.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/scenes/MainScene.ts (buildInfoPanel, toggleInfoPanel, CO2_EQUIVALENCES)
+- Tests:
+  - Test strategy: manual
+  - Unit: n/a
+  - Acceptance: partial
+
+## F-0012: Tree Species Selector
+- Parent: F-0004
+- Dependencies: F-0004
+- Complexity: S
+- Tags: [game, ui, trees]
+- Status: shipped
+- Acceptance: spec/acceptance/F-0012.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/scenes/MainScene.ts (createTreeSelector, selectSpecies, selectorRects), src/types/TreeTypes.ts
+- Tests:
+  - Test strategy: manual
+  - Unit: n/a
+  - Acceptance: partial
+
+## F-0013: Age Label Toggle
+- Parent: F-0004
+- Dependencies: F-0004
+- Complexity: S
+- Tags: [game, ui, trees]
+- Status: shipped
+- Acceptance: spec/acceptance/F-0013.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/entities/Tree.ts (setAgeVisible), src/scenes/MainScene.ts (toggleAgeLabels, showAgeLabels)
+- Tests:
+  - Test strategy: manual
+  - Unit: n/a
+  - Acceptance: partial
+
+## F-0014: One Tree Per Cell Constraint
+- Parent: F-0004
+- Dependencies: F-0004
+- Complexity: S
+- Tags: [game, trees, rules]
+- Status: shipped
+- Acceptance: spec/acceptance/F-0014.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/scenes/MainScene.ts (placeTree occupation check)
+- Tests:
+  - Test strategy: unit
+  - Unit: todo
+  - Acceptance: partial
+
+## F-0015: MainScene Refactor
+- Parent: F-0002
+- Dependencies: F-0002
+- Complexity: M
+- Tags: [infrastructure, refactor]
+- Priority: high
+- Status: planned
+- Acceptance: spec/acceptance/F-0015.md
 - Implementation:
   - State: none
 - Tests:
