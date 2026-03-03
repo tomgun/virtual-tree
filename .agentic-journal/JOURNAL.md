@@ -38,3 +38,16 @@
 
 **Blockers**: None
 
+
+### Session: 2026-03-03 16:48 - Isometric terrain fix
+
+**Why**: Committing working isometric terrain state
+
+**Accomplished**:
+- Fixed terrain continuity by using solid fillRect background + tile outlines only (eliminates WebGL rasterization gaps). Fixed checkerboard optical illusion by using single grass color. Increased tree minimum size. Restarted dev server.
+
+**Next steps**:
+- Add tree types
+
+**Blockers**: None
+

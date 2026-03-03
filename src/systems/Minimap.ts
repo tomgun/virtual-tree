@@ -2,134 +2,103 @@ import Phaser from 'phaser';
 import { Tree } from '../entities/Tree';
 
 /**
- * Minimap system for navigation
+ * Small overview map in the top-right corner.
  */
 export class Minimap {
   private scene: Phaser.Scene;
-  private minimapContainer?: Phaser.GameObjects.Container;
-  private minimapGraphics?: Phaser.GameObjects.Graphics;
-  private viewportRect?: Phaser.GameObjects.Rectangle;
-  private treeDots: Phaser.GameObjects.Arc[] = [];
-  private terrainSize: number;
-  private minimapSize: number = 200;
-  private minimapScale: number = 1;
+  private worldW: number;
+  private worldH: number;
+  private readonly SIZE = 200; // minimap square size in pixels
+  private scaleX: number;
+  private scaleY: number;
 
-  constructor(scene: Phaser.Scene, terrainSize: number) {
+  private container?: Phaser.GameObjects.Container;
+  private viewport?: Phaser.GameObjects.Rectangle;
+  private treeDots: Phaser.GameObjects.Arc[] = [];
+
+  constructor(scene: Phaser.Scene, worldW: number, worldH: number) {
     this.scene = scene;
-    this.terrainSize = terrainSize;
-    this.minimapScale = this.minimapSize / terrainSize;
+    this.worldW = worldW;
+    this.worldH = worldH;
+    this.scaleX = this.SIZE / worldW;
+    this.scaleY = this.SIZE / worldH;
   }
 
-  /**
-   * Create the minimap UI
-   */
-  public create(x: number, y: number): void {
-    // Create container for minimap
-    this.minimapContainer = this.scene.add.container(x, y);
-    this.minimapContainer.setScrollFactor(0); // Fixed to camera
+  public create(cx: number, cy: number): void {
+    this.container = this.scene.add.container(cx, cy);
+    this.container.setScrollFactor(0);
+    this.container.setDepth(1000);
 
     // Background
-    const bg = this.scene.add.rectangle(0, 0, this.minimapSize + 10, this.minimapSize + 10, 0x000000, 0.7);
+    const bg = this.scene.add.rectangle(0, 0, this.SIZE + 10, this.SIZE + 10, 0x000000, 0.75);
     bg.setStrokeStyle(2, 0xffffff);
-    this.minimapContainer.add(bg);
+    this.container.add(bg);
 
-    // Minimap graphics for terrain
-    this.minimapGraphics = this.scene.add.graphics();
-    this.minimapGraphics.fillStyle(0x2d5016, 0.5);
-    this.minimapGraphics.fillRect(-this.minimapSize / 2, -this.minimapSize / 2, this.minimapSize, this.minimapSize);
-    this.minimapContainer.add(this.minimapGraphics);
+    // Terrain fill
+    const terrain = this.scene.add.rectangle(0, 0, this.SIZE, this.SIZE, 0x3a6830, 0.6);
+    this.container.add(terrain);
 
-    // Viewport rectangle (shows current camera view)
-    this.viewportRect = this.scene.add.rectangle(0, 0, 0, 0, 0xffffff, 0.3);
-    this.viewportRect.setStrokeStyle(2, 0xffff00);
-    this.minimapContainer.add(this.viewportRect);
+    // Viewport indicator
+    this.viewport = this.scene.add.rectangle(0, 0, 10, 10, 0xffffff, 0.25);
+    this.viewport.setStrokeStyle(2, 0xffff00);
+    this.container.add(this.viewport);
 
     // Label
-    const label = this.scene.add.text(0, -this.minimapSize / 2 - 15, 'Minimap', {
-      fontSize: '14px',
-      color: '#ffffff',
-    });
-    label.setOrigin(0.5, 1);
-    this.minimapContainer.add(label);
+    const label = this.scene.add.text(0, -this.SIZE / 2 - 14, 'Map', {
+      fontSize: '13px', color: '#ffffff',
+    }).setOrigin(0.5, 1);
+    this.container.add(label);
 
-    // Make minimap clickable for navigation
+    // Click to navigate
     bg.setInteractive({ useHandCursor: true });
-    bg.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-      this.handleMinimapClick(pointer);
+    bg.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      if (!this.container) return;
+      const lx = ptr.x - this.container.x;
+      const ly = ptr.y - this.container.y;
+      const wx = (lx + this.SIZE / 2) / this.scaleX;
+      const wy = (ly + this.SIZE / 2) / this.scaleY;
+      this.scene.cameras.main.centerOn(
+        Phaser.Math.Clamp(wx, 0, this.worldW),
+        Phaser.Math.Clamp(wy, 0, this.worldH),
+      );
     });
   }
 
-  /**
-   * Update minimap with current trees and camera position
-   */
   public update(trees: Tree[], camera: Phaser.Cameras.Scene2D.Camera): void {
-    if (!this.minimapContainer || !this.minimapGraphics) return;
+    if (!this.container) return;
 
-    // Clear existing tree dots
-    this.treeDots.forEach((dot) => dot.destroy());
+    // Remove old dots
+    this.treeDots.forEach(d => d.destroy());
     this.treeDots = [];
 
-    // Draw trees as dots
-    trees.forEach((tree) => {
-      const pos = tree.getWorldPosition();
-      const minimapX = (pos.x * this.minimapScale) - this.minimapSize / 2;
-      const minimapY = (pos.y * this.minimapScale) - this.minimapSize / 2;
-
-      // Only draw if within minimap bounds
-      if (minimapX >= -this.minimapSize / 2 && minimapX <= this.minimapSize / 2 &&
-          minimapY >= -this.minimapSize / 2 && minimapY <= this.minimapSize / 2) {
-        const dot = this.scene.add.circle(
-          minimapX,
-          minimapY,
-          2,
-          tree.treeData.age > 30 ? 0x228b22 : 0x90ee90 // Darker green for older trees
-        );
-        dot.setScrollFactor(0);
-        this.minimapContainer!.add(dot);
-        this.treeDots.push(dot);
-      }
+    // Draw tree dots
+    trees.forEach(tree => {
+      const wp = tree.getWorldPosition();
+      const mx = wp.x * this.scaleX - this.SIZE / 2;
+      const my = wp.y * this.scaleY - this.SIZE / 2;
+      if (mx < -this.SIZE / 2 || mx > this.SIZE / 2) return;
+      if (my < -this.SIZE / 2 || my > this.SIZE / 2) return;
+      const dot = this.scene.add.circle(mx, my, 2, 0x228b22);
+      dot.setScrollFactor(0);
+      this.container!.add(dot);
+      this.treeDots.push(dot);
     });
 
     // Update viewport rectangle
-    if (this.viewportRect) {
-      const viewportWidth = (camera.width * this.minimapScale);
-      const viewportHeight = (camera.height * this.minimapScale);
-      const viewportX = (camera.scrollX * this.minimapScale) - this.minimapSize / 2;
-      const viewportY = (camera.scrollY * this.minimapScale) - this.minimapSize / 2;
-
-      this.viewportRect.setSize(viewportWidth, viewportHeight);
-      this.viewportRect.setPosition(viewportX, viewportY);
+    if (this.viewport) {
+      const vw = camera.width  * this.scaleX;
+      const vh = camera.height * this.scaleY;
+      const vx = camera.scrollX * this.scaleX - this.SIZE / 2;
+      const vy = camera.scrollY * this.scaleY - this.SIZE / 2;
+      this.viewport.setSize(vw, vh).setPosition(vx + vw / 2, vy + vh / 2);
     }
   }
 
-  /**
-   * Handle click on minimap to navigate
-   */
-  private handleMinimapClick(pointer: Phaser.Input.Pointer): void {
-    if (!this.minimapContainer) return;
-
-    // Get local coordinates relative to minimap center
-    const localX = pointer.x - this.minimapContainer.x;
-    const localY = pointer.y - this.minimapContainer.y;
-
-    // Convert to world coordinates
-    const worldX = (localX + this.minimapSize / 2) / this.minimapScale;
-    const worldY = (localY + this.minimapSize / 2) / this.minimapScale;
-
-    // Clamp to terrain bounds
-    const clampedX = Phaser.Math.Clamp(worldX, 0, this.terrainSize);
-    const clampedY = Phaser.Math.Clamp(worldY, 0, this.terrainSize);
-
-    // Move camera to clicked position
-    this.scene.cameras.main.centerOn(clampedX, clampedY);
+  public setDepth(depth: number): void {
+    this.container?.setDepth(depth);
   }
 
-  /**
-   * Toggle minimap visibility
-   */
-  public setVisible(visible: boolean): void {
-    if (this.minimapContainer) {
-      this.minimapContainer.setVisible(visible);
-    }
+  public setVisible(v: boolean): void {
+    this.container?.setVisible(v);
   }
 }
