@@ -34,6 +34,9 @@ export class MainScene extends Phaser.Scene {
   private infoPanel?: Phaser.GameObjects.Container;
   private infoPanelVisible = false;
 
+  // ── Age labels ────────────────────────────────────────────────────
+  private showAgeLabels = true;
+
   // ── Tree selection ────────────────────────────────────────────────
   private selectedSpecies: TreeSpecies = 'oak';
   private selectorButtons: Phaser.GameObjects.Container[] = [];
@@ -144,8 +147,11 @@ export class MainScene extends Phaser.Scene {
     // Space → name dialog
     kb.on('keydown-SPACE', () => { if (!this.nameInputActive) this.showNameInput(); });
 
-    // D → CO₂ impact info panel (toggle; allowed even when panel is open so D closes it)
-    kb.on('keydown-D', () => { if (!this.nameInputActive) this.toggleInfoPanel(); });
+    // I → CO₂ impact info panel (toggle; allowed even when panel is open so I closes it)
+    kb.on('keydown-I', () => { if (!this.nameInputActive) this.toggleInfoPanel(); });
+
+    // A → toggle tree age labels
+    kb.on('keydown-A', () => { if (!this.nameInputActive) this.toggleAgeLabels(); });
 
     // 1–5 → select tree species
     ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'].forEach((name, i) => {
@@ -160,7 +166,8 @@ export class MainScene extends Phaser.Scene {
     // handle them first (e.g. Space scrolling the page).
     kb.addCapture([
       Phaser.Input.Keyboard.KeyCodes.SPACE,
-      Phaser.Input.Keyboard.KeyCodes.D,
+      Phaser.Input.Keyboard.KeyCodes.A,
+      Phaser.Input.Keyboard.KeyCodes.I,
       Phaser.Input.Keyboard.KeyCodes.UP,
       Phaser.Input.Keyboard.KeyCodes.DOWN,
       Phaser.Input.Keyboard.KeyCodes.LEFT,
@@ -281,7 +288,7 @@ export class MainScene extends Phaser.Scene {
       : `PROD: ${GrowthConfig.getGrowthDescription()}`;
     this.instrText = this.add.text(
       W - 20, 20 + (this.helpBtn?.height ?? 36) + 6,
-      `Click → plant tree\nArrows → move camera\nSpace → change name\n1-5 → select tree type\n(${modeLabel})`,
+      `Click → plant tree\nArrows → move camera\nSpace → change name\n1-5 → select tree type\nA → toggle age labels\nI → CO₂ impact panel\n(${modeLabel})`,
       { fontSize: '14px', color: '#ffffff', backgroundColor: '#000000cc',
         padding: { x: 8, y: 6 }, align: 'right' },
     ).setOrigin(1, 0).setScrollFactor(0).setDepth(2000).setVisible(false);
@@ -425,6 +432,11 @@ export class MainScene extends Phaser.Scene {
     { emoji: '🎮',  label: 'hours of PC gaming',           kgPerUnit: 0.1,   unit: 'hr'          },
   ];
 
+  private toggleAgeLabels(): void {
+    this.showAgeLabels = !this.showAgeLabels;
+    this.trees.forEach(t => t.setAgeVisible(this.showAgeLabels));
+  }
+
   private toggleInfoPanel(): void {
     this.infoPanelVisible = !this.infoPanelVisible;
     this.infoPanel?.destroy();
@@ -533,9 +545,10 @@ export class MainScene extends Phaser.Scene {
     }).setOrigin(0.5, 1);
     this.infoPanel.add(sources);
 
-    // Close hint
-    const closeHint = this.add.text(0, PH / 2 - 14, 'Press  D  to close', {
-      fontSize: '12px', color: '#667766', align: 'center',
+    // Keyboard reference + close hint
+    const closeHint = this.add.text(0, PH / 2 - 14,
+      'I  impact panel  ·  A  toggle ages  ·  Space  change name  ·  1-5  tree type  ·  Arrows  move', {
+      fontSize: '10px', color: '#667766', align: 'center',
     }).setOrigin(0.5, 1);
     this.infoPanel.add(closeHint);
   }
@@ -619,6 +632,7 @@ export class MainScene extends Phaser.Scene {
       plantedAt: Date.now(),
     };
     const tree = new Tree(this, data);
+    tree.setAgeVisible(this.showAgeLabels);
     this.trees.push(tree);
     this.saveGameState();
     this.updateScoreDisplay();
@@ -657,6 +671,7 @@ export class MainScene extends Phaser.Scene {
       // Guard: skip trees with out-of-grid coordinates (stale format)
       if (data.x < 0 || data.x >= GRID_COLS || data.y < 0 || data.y >= GRID_ROWS) return;
       const tree = new Tree(this, data);
+      tree.setAgeVisible(this.showAgeLabels);
       this.trees.push(tree);
     });
   }

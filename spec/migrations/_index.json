@@ -1,12 +1,18 @@
 {
   "version": "1.0",
-  "last_migration": 1,
+  "last_migration": 2,
   "migrations": [
     {
       "id": 1,
       "file": "001_add_initial_acceptance_criteria_for_f0001_through_f0008_firsttime_creation_not_modification.md",
       "date": "2026-03-03",
       "description": "Add initial acceptance criteria for F-0001 through F-0008 (first-time creation, not modification)"
+    },
+    {
+      "id": 2,
+      "file": "002_add_f0011_through_f0015_mark_f0009_shipped.md",
+      "date": "2026-03-03",
+      "description": "Add F-0011 through F-0015; mark F-0009 shipped"
     }
   ]
 }
