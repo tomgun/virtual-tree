@@ -416,11 +416,13 @@ export class MainScene extends Phaser.Scene {
     { emoji: '🚗',  label: 'km driven by car',             kgPerUnit: 0.12,  unit: 'km'          },
     { emoji: '💻',  label: 'data centre server-hours',     kgPerUnit: 0.5,   unit: 'server-hr'   },
     { emoji: '📱',  label: 'smartphone years of charging', kgPerUnit: 8,     unit: 'phone-year'  },
+    { emoji: '🤖',  label: '100k-token AI prompts',        kgPerUnit: 0.05,  unit: 'prompt'      },
     { emoji: '📺',  label: 'hours of streaming video',     kgPerUnit: 0.036, unit: 'hr'          },
     { emoji: '👕',  label: 'new cotton t-shirts produced', kgPerUnit: 7,     unit: 't-shirt'     },
     { emoji: '🍺',  label: 'pints of beer brewed',         kgPerUnit: 0.3,   unit: 'pint'        },
     { emoji: '🏠',  label: 'days of home heating (EU avg)',kgPerUnit: 8.5,   unit: 'day'         },
     { emoji: '🛁',  label: 'hot baths taken',              kgPerUnit: 0.5,   unit: 'bath'        },
+    { emoji: '🎮',  label: 'hours of PC gaming',           kgPerUnit: 0.1,   unit: 'hr'          },
   ];
 
   private toggleInfoPanel(): void {
@@ -605,6 +607,9 @@ export class MainScene extends Phaser.Scene {
 
   private placeTree(gx: number, gy: number): void {
     if (!this.playerName) { this.showNameInput(); return; }
+
+    // Prevent stacking — one tree per grid cell
+    if (this.trees.some(t => t.treeData.x === gx && t.treeData.y === gy)) return;
 
     const data: TreeData = {
       id: `tree-${Date.now()}-${Math.random().toString(36).slice(2)}`,
