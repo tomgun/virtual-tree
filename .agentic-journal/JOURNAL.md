@@ -51,3 +51,16 @@
 
 **Blockers**: None
 
+
+### Session: 2026-03-03 18:19 - Game improvements + framework setup
+
+**Why**: Large batch of game polish plus framework initialization work
+
+**Accomplished**:
+- Added 5 tree species (Oak/Pine/Palm/Cherry/Birch) with isometric shapes; fixed toolbar/minimap click handling (screen-space hit-testing); added CO2 info panel (D key) with real-world equivalences; added ? help button; resize-aware UI repositioning; fixed keyboard shortcuts (keydown-X pattern + addCapture); fixed canvas focus issue; installed git hooks; wrote acceptance criteria F-0001-F-0010; updated FEATURES.md statuses
+
+**Next steps**:
+- Review and merge feature branch; write unit tests for CO2Calculator and IsometricUtils; consider splitting MainScene.ts into smaller modules
+
+**Blockers**: MainScene.ts exceeds 500-line limit - needs refactoring into sub-components in a future session
+
