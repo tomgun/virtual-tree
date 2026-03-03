@@ -77,3 +77,16 @@
 
 **Blockers**: MainScene.ts at ~700 lines keeps blocking SKIP_COMPLEXITY — F-0015 refactor is high priority
 
+
+### Session: 2026-03-03 19:13 - F-0016 Forest Animals
+
+**Why**: F-0016 shipped, all types pass, dev server updated
+
+**Accomplished**:
+- Implemented Animal entity (mouse, ant, bug) with idle/wander/dash state machine, procedural Phaser.Graphics drawing, per-frame depth sorting for tree occlusion, and AnimalManager for population sync (1 per 10 trees). Integrated into MainScene update loop.
+
+**Next steps**:
+- Review visuals in browser, test occlusion depth order, write unit tests (F-0015 still planned)
+
+**Blockers**: None
+

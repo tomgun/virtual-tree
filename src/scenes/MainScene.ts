@@ -4,6 +4,7 @@ import { CO2Calculator } from '../systems/CO2Calculator';
 import { StorageManager, GameState } from '../systems/StorageManager';
 import { GrowthConfig } from '../systems/GrowthConfig';
 import { Minimap } from '../systems/Minimap';
+import { AnimalManager } from '../systems/AnimalManager';
 import {
   IsometricUtils,
   TILE_W, TILE_H,
@@ -20,6 +21,7 @@ export class MainScene extends Phaser.Scene {
   // ── Systems ────────────────────────────────────────────────────────
   private co2Calculator = new CO2Calculator();
   private minimap?: Minimap;
+  private animalManager?: AnimalManager;
 
   // ── UI references ─────────────────────────────────────────────────
   private scoreText?: Phaser.GameObjects.Text;
@@ -81,6 +83,9 @@ export class MainScene extends Phaser.Scene {
     if (!this.playerName) {
       this.time.delayedCall(400, () => this.showNameInput());
     }
+
+    this.animalManager = new AnimalManager(this);
+    this.animalManager.sync(this.trees);
 
     this.time.addEvent({ delay: 1000, callback: this.tickTreeGrowth, callbackScope: this, loop: true });
     this.time.addEvent({ delay: 500,  callback: this.tickMinimap,    callbackScope: this, loop: true });
@@ -634,6 +639,7 @@ export class MainScene extends Phaser.Scene {
     const tree = new Tree(this, data);
     tree.setAgeVisible(this.showAgeLabels);
     this.trees.push(tree);
+    this.animalManager?.sync(this.trees);
     this.saveGameState();
     this.updateScoreDisplay();
   }
@@ -688,12 +694,14 @@ export class MainScene extends Phaser.Scene {
 
   // ── Game loop ──────────────────────────────────────────────────────
 
-  update(): void {
-    if (this.nameInputActive || !this.cursors) return;
-    const cam = this.cameras.main;
-    if (this.cursors.left.isDown)  cam.scrollX -= this.CAM_SPEED;
-    if (this.cursors.right.isDown) cam.scrollX += this.CAM_SPEED;
-    if (this.cursors.up.isDown)    cam.scrollY -= this.CAM_SPEED;
-    if (this.cursors.down.isDown)  cam.scrollY += this.CAM_SPEED;
+  update(_time: number, delta: number): void {
+    if (!this.nameInputActive && this.cursors) {
+      const cam = this.cameras.main;
+      if (this.cursors.left.isDown)  cam.scrollX -= this.CAM_SPEED;
+      if (this.cursors.right.isDown) cam.scrollX += this.CAM_SPEED;
+      if (this.cursors.up.isDown)    cam.scrollY -= this.CAM_SPEED;
+      if (this.cursors.down.isDown)  cam.scrollY += this.CAM_SPEED;
+    }
+    this.animalManager?.update(delta, this.trees);
   }
 }

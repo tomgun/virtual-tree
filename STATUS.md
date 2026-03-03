@@ -8,7 +8,7 @@ Purpose: the living "truth" of where the project is today.
 Virtual Tree is an isometric web game where players plan virtual trees, track CO2 scores, and compete on leaderboards. Built with Phaser 3, TypeScript, and deployed to GitHub Pages. (See OVERVIEW.md for details)
 
 ## Current session state (optional, for mid-session tracking)
-- Merge PR #4; implement F-0015 MainScene refactor (Updated: 2026-03-03 18:50 EET)
+- F-0016 Forest Animals — shipped; next F-0015 MainScene refactor (Updated: 2026-03-03 19:14 EET)
   - Set up npm project with Phaser 3, TypeScript, Vite
   - Implemented isometric terrain with scrolling
   - Created tree placement system
