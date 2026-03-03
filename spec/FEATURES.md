@@ -277,3 +277,20 @@
   - State: none
 - Tests:
   - Unit: todo
+
+## F-0016 · Forest Animals
+
+- Title: Animated Forest Animals
+- Description: Small critters (mice, ants, beetles) wander the forest. Population scales at 1 per 10 trees. Animals use isometric depth-sorting so they pass behind trees naturally. Behaviour: slow wander + occasional fast dash toward a tree to hide. Critters are drawn procedurally with Phaser Graphics.
+- Dependencies: F-0002, F-0005
+- Complexity: M
+- Tags: [visual, animation, gameplay]
+- Priority: medium
+- Status: shipped
+- Acceptance: spec/acceptance/F-0016.md
+- Implementation:
+  - File: src/entities/Animal.ts
+  - File: src/systems/AnimalManager.ts
+  - Integration: src/scenes/MainScene.ts — AnimalManager.sync() / update()
+- Tests:
+  - Unit: todo
