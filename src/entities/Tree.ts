@@ -82,6 +82,10 @@ export class Tree extends Phaser.GameObjects.Container {
     this.ageText.setPosition(0, -size - 18);
   }
 
+  public setAgeVisible(visible: boolean): void {
+    this.ageText.setVisible(visible);
+  }
+
   public getWorldPosition(): { x: number; y: number } {
     return { x: this.x, y: this.y };
   }
