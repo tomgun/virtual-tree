@@ -147,8 +147,8 @@ export class MainScene extends Phaser.Scene {
     // Space → name dialog
     kb.on('keydown-SPACE', () => { if (!this.nameInputActive) this.showNameInput(); });
 
-    // D → CO₂ impact info panel (toggle; allowed even when panel is open so D closes it)
-    kb.on('keydown-D', () => { if (!this.nameInputActive) this.toggleInfoPanel(); });
+    // I → CO₂ impact info panel (toggle; allowed even when panel is open so I closes it)
+    kb.on('keydown-I', () => { if (!this.nameInputActive) this.toggleInfoPanel(); });
 
     // A → toggle tree age labels
     kb.on('keydown-A', () => { if (!this.nameInputActive) this.toggleAgeLabels(); });
@@ -167,7 +167,7 @@ export class MainScene extends Phaser.Scene {
     kb.addCapture([
       Phaser.Input.Keyboard.KeyCodes.SPACE,
       Phaser.Input.Keyboard.KeyCodes.A,
-      Phaser.Input.Keyboard.KeyCodes.D,
+      Phaser.Input.Keyboard.KeyCodes.I,
       Phaser.Input.Keyboard.KeyCodes.UP,
       Phaser.Input.Keyboard.KeyCodes.DOWN,
       Phaser.Input.Keyboard.KeyCodes.LEFT,
@@ -288,7 +288,7 @@ export class MainScene extends Phaser.Scene {
       : `PROD: ${GrowthConfig.getGrowthDescription()}`;
     this.instrText = this.add.text(
       W - 20, 20 + (this.helpBtn?.height ?? 36) + 6,
-      `Click → plant tree\nArrows → move camera\nSpace → change name\n1-5 → select tree type\n(${modeLabel})`,
+      `Click → plant tree\nArrows → move camera\nSpace → change name\n1-5 → select tree type\nA → toggle age labels\nI → CO₂ impact panel\n(${modeLabel})`,
       { fontSize: '14px', color: '#ffffff', backgroundColor: '#000000cc',
         padding: { x: 8, y: 6 }, align: 'right' },
     ).setOrigin(1, 0).setScrollFactor(0).setDepth(2000).setVisible(false);
@@ -547,7 +547,7 @@ export class MainScene extends Phaser.Scene {
 
     // Keyboard reference + close hint
     const closeHint = this.add.text(0, PH / 2 - 14,
-      'D  impact panel  ·  A  toggle ages  ·  Space  change name  ·  1-5  tree type  ·  Arrows  move', {
+      'I  impact panel  ·  A  toggle ages  ·  Space  change name  ·  1-5  tree type  ·  Arrows  move', {
       fontSize: '10px', color: '#667766', align: 'center',
     }).setOrigin(0.5, 1);
     this.infoPanel.add(closeHint);
