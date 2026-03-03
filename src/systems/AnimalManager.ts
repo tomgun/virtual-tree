@@ -3,7 +3,7 @@ import { Animal, AnimalSpecies } from '../entities/Animal';
 import { Tree } from '../entities/Tree';
 import { IsometricUtils, GRID_COLS, GRID_ROWS, TILE_W, TILE_H } from '../utils/IsometricUtils';
 
-const TREES_PER_ANIMAL = 10;
+const TREES_PER_ANIMAL = 20;
 const SPECIES: AnimalSpecies[] = ['mouse', 'ant', 'bug'];
 
 /**
