@@ -1,0 +1,25 @@
+{
+  "name": "virtual-tree",
+  "version": "0.1.0",
+  "description": "An isometric web game where players plan virtual trees and track CO2 scores",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": ["game", "phaser", "isometric", "environment", "co2"],
+  "author": "Tomas Günther",
+  "license": "PROPRIETARY",
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vitest": "^4.0.18"
+  }
+}
