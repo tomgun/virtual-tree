@@ -54,7 +54,7 @@ export const TREE_TYPES: TreeTypeConfig[] = [
     foliageColor: 0xf4a0c8,
     darkColor:    0xc05888,
     trunkColor:   0x6b3a1f,
-    co2PerYear:   18,
+    co2PerYear:   13,
     shape:        'round',
     description:  'Beautiful blossoms, medium CO₂',
   },
