@@ -608,6 +608,9 @@ export class MainScene extends Phaser.Scene {
   private placeTree(gx: number, gy: number): void {
     if (!this.playerName) { this.showNameInput(); return; }
 
+    // Prevent stacking — one tree per grid cell
+    if (this.trees.some(t => t.treeData.x === gx && t.treeData.y === gy)) return;
+
     const data: TreeData = {
       id: `tree-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       x: gx, y: gy, age: 0,
