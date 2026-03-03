@@ -34,68 +34,164 @@
 ## F-0001: Project Setup
 - Parent: none
 - Dependencies: none
-- Status: in_progress
+- Complexity: S
+- Tags: [infrastructure, tooling]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0001.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: partial
+  - State: complete
+  - Code: package.json, tsconfig.json, vite.config.ts, .github/workflows/deploy.yml, .agentic/
 - Tests:
-  - Unit: todo
+  - Test strategy: manual
+  - Unit: n/a
+  - Acceptance: partial
 
 ## F-0002: Basic Phaser 3 Project Structure
 - Parent: F-0001
 - Dependencies: F-0001
-- Status: planned
+- Complexity: S
+- Tags: [game, infrastructure]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0002.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: none
+  - State: complete
+  - Code: src/main.ts, src/scenes/MainScene.ts, index.html
 - Tests:
+  - Test strategy: manual
   - Unit: todo
+  - Acceptance: partial
 
 ## F-0003: Isometric Terrain Rendering
 - Parent: F-0002
 - Dependencies: F-0002
-- Status: planned
+- Complexity: M
+- Tags: [game, rendering, isometric]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0003.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: none
+  - State: complete
+  - Code: src/utils/IsometricUtils.ts, src/scenes/MainScene.ts (createTerrain)
 - Tests:
+  - Test strategy: unit
   - Unit: todo
+  - Acceptance: partial
 
 ## F-0004: Tree Placement System
 - Parent: F-0003
 - Dependencies: F-0003
-- Status: planned
+- Complexity: M
+- Tags: [game, trees, interaction]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0004.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: none
+  - State: complete
+  - Code: src/entities/Tree.ts, src/entities/IsometricTree.ts, src/types/TreeTypes.ts, src/scenes/MainScene.ts
 - Tests:
+  - Test strategy: unit
   - Unit: todo
+  - Acceptance: partial
 
 ## F-0005: CO2 Scoring System
 - Parent: F-0004
 - Dependencies: F-0004
-- Status: planned
+- Complexity: S
+- Tags: [game, scoring, co2]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0005.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: none
+  - State: complete
+  - Code: src/systems/CO2Calculator.ts, src/scenes/MainScene.ts (updateScoreDisplay)
 - Tests:
+  - Test strategy: unit
   - Unit: todo
+  - Acceptance: partial
 
 ## F-0006: Player Name Input and Tagging
 - Parent: F-0002
 - Dependencies: F-0002
-- Status: planned
+- Complexity: S
+- Tags: [game, player, ui]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0006.md
+- Verification:
+  - Accepted: no
 - Implementation:
-  - State: none
+  - State: complete
+  - Code: src/scenes/MainScene.ts (showNameInput, savePlayerName)
 - Tests:
+  - Test strategy: unit
   - Unit: todo
+  - Acceptance: partial
 
 ## F-0007: LocalStorage Persistence
 - Parent: F-0005
 - Dependencies: F-0005, F-0006
-- Status: planned
+- Complexity: S
+- Tags: [data, persistence]
+- Status: shipped
 - Acceptance: spec/acceptance/F-0007.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/systems/StorageManager.ts, src/scenes/MainScene.ts (loadGameState, saveGameState)
+- Tests:
+  - Test strategy: unit
+  - Unit: todo
+  - Acceptance: partial
+
+## F-0008: Minimap Navigation
+- Parent: F-0002
+- Dependencies: F-0002, F-0003
+- Complexity: S
+- Tags: [game, ui, navigation]
+- Status: shipped
+- Acceptance: spec/acceptance/F-0008.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: complete
+  - Code: src/systems/Minimap.ts, src/scenes/MainScene.ts
+- Tests:
+  - Test strategy: manual
+  - Unit: todo
+  - Acceptance: partial
+
+## F-0009: Responsive UI Layout
+- Parent: F-0002
+- Dependencies: F-0002
+- Complexity: S
+- Tags: [ui, responsive]
+- Status: in_progress
+- Acceptance: spec/acceptance/F-0009.md
+- Verification:
+  - Accepted: no
+- Implementation:
+  - State: partial
+  - Code: src/scenes/MainScene.ts (repositionUI, scale resize listener)
+- Tests:
+  - Test strategy: manual
+  - Unit: n/a
+  - Acceptance: todo
+
+## F-0010: Mobile / Touch Support
+- Parent: F-0009
+- Dependencies: F-0009
+- Complexity: L
+- Tags: [mobile, touch, responsive]
+- Priority: medium
+- Status: planned
+- Acceptance: spec/acceptance/F-0010.md
 - Implementation:
   - State: none
 - Tests:

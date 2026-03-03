@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "last_migration": 1,
+  "migrations": [
+    {
+      "id": 1,
+      "file": "001_add_initial_acceptance_criteria_for_f0001_through_f0008_firsttime_creation_not_modification.md",
+      "date": "2026-03-03",
+      "description": "Add initial acceptance criteria for F-0001 through F-0008 (first-time creation, not modification)"
+    }
+  ]
+}
