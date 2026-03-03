@@ -15,6 +15,8 @@ export class Minimap {
   private container?: Phaser.GameObjects.Container;
   private viewport?: Phaser.GameObjects.Rectangle;
   private treeDots: Phaser.GameObjects.Arc[] = [];
+  private cx = 0;
+  private cy = 0;
 
   constructor(scene: Phaser.Scene, worldW: number, worldH: number) {
     this.scene = scene;
@@ -24,7 +26,27 @@ export class Minimap {
     this.scaleY = this.SIZE / worldH;
   }
 
+  /** Screen-space bounding box of the minimap panel (for external hit-testing). */
+  public getScreenBounds(): { x: number; y: number; w: number; h: number } {
+    const half = (this.SIZE + 10) / 2;
+    return { x: this.cx - half, y: this.cy - half, w: this.SIZE + 10, h: this.SIZE + 10 };
+  }
+
+  /** Pan the camera to the world position that corresponds to screen point (px, py). */
+  public navigateToScreenPoint(px: number, py: number): void {
+    const lx = px - this.cx;
+    const ly = py - this.cy;
+    const wx = (lx + this.SIZE / 2) / this.scaleX;
+    const wy = (ly + this.SIZE / 2) / this.scaleY;
+    this.scene.cameras.main.centerOn(
+      Phaser.Math.Clamp(wx, 0, this.worldW),
+      Phaser.Math.Clamp(wy, 0, this.worldH),
+    );
+  }
+
   public create(cx: number, cy: number): void {
+    this.cx = cx;
+    this.cy = cy;
     this.container = this.scene.add.container(cx, cy);
     this.container.setScrollFactor(0);
     this.container.setDepth(1000);
@@ -49,19 +71,8 @@ export class Minimap {
     }).setOrigin(0.5, 1);
     this.container.add(label);
 
-    // Click to navigate
-    bg.setInteractive({ useHandCursor: true });
-    bg.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
-      if (!this.container) return;
-      const lx = ptr.x - this.container.x;
-      const ly = ptr.y - this.container.y;
-      const wx = (lx + this.SIZE / 2) / this.scaleX;
-      const wy = (ly + this.SIZE / 2) / this.scaleY;
-      this.scene.cameras.main.centerOn(
-        Phaser.Math.Clamp(wx, 0, this.worldW),
-        Phaser.Math.Clamp(wy, 0, this.worldH),
-      );
-    });
+    // Navigation is handled in MainScene via screen-space hit-testing
+    // (Phaser interactive on scroll-factor-0 containers drifts with the camera)
   }
 
   public update(trees: Tree[], camera: Phaser.Cameras.Scene2D.Camera): void {
@@ -92,6 +103,12 @@ export class Minimap {
       const vy = camera.scrollY * this.scaleY - this.SIZE / 2;
       this.viewport.setSize(vw, vh).setPosition(vx + vw / 2, vy + vh / 2);
     }
+  }
+
+  public setPosition(cx: number, cy: number): void {
+    this.cx = cx;
+    this.cy = cy;
+    this.container?.setPosition(cx, cy);
   }
 
   public setDepth(depth: number): void {
