@@ -35,6 +35,14 @@ export class AnimalManager {
     }
   }
 
+  /**
+   * Startle all animals within range of a newly planted tree.
+   * Call this *after* sync() so newly spawned animals can also be startled.
+   */
+  onTreePlanted(treeWorldX: number, treeWorldY: number): void {
+    this.animals.forEach(a => a.startle(treeWorldX, treeWorldY));
+  }
+
   /** Call every frame from MainScene.update(). */
   update(delta: number, trees: Tree[]): void {
     if (this.animals.length === 0) return;

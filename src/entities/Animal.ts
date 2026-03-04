@@ -5,11 +5,14 @@ import { IsometricUtils, GRID_COLS, GRID_ROWS, TILE_W, TILE_H } from '../utils/I
 
 export type AnimalSpecies = 'mouse' | 'ant' | 'bug';
 
-type State = 'idle' | 'wander' | 'dash';
+type State = 'idle' | 'wander' | 'dash' | 'flee';
 
 // World bounds (computed from grid constants)
 const WORLD_W = (GRID_COLS + GRID_ROWS) * (TILE_W / 2);
 const WORLD_H = (GRID_COLS + GRID_ROWS) * (TILE_H / 2);
+
+// Approx world-pixel radius for 5 isometric tiles (√((TILE_W/2)²+(TILE_H/2)²) ≈ 71.5)
+const STARTLE_RANGE = 5 * 72;
 
 // Speed in world-pixels / second
 const SPEEDS: Record<AnimalSpecies, { wander: number; dash: number }> = {
@@ -30,6 +33,8 @@ export class Animal extends Phaser.GameObjects.Container {
   private speed       = 0;
   private hasTarget   = false;
   private gfx: Phaser.GameObjects.Graphics;
+  private stressGfx?: Phaser.GameObjects.Graphics;
+  private stressTween?: Phaser.Tweens.Tween;
 
   constructor(scene: Phaser.Scene, x: number, y: number, species: AnimalSpecies) {
     super(scene, x, y);
@@ -197,10 +202,8 @@ export class Animal extends Phaser.GameObjects.Container {
     // Flip sprite based on horizontal direction
     this.scaleX = dx < 0 ? -1 : 1;
 
-    // Tiny vertical bob when wandering (not dashing — looks odd fast)
-    if (this.aiState === 'wander') {
-      this.gfx.y = Math.sin(Date.now() * 0.006) * 1.2;
-    }
+    // Tiny vertical bob when wandering (not when dashing or fleeing)
+    this.gfx.y = this.aiState === 'wander' ? Math.sin(Date.now() * 0.006) * 1.2 : 0;
 
     this.refreshDepth();
   }
@@ -245,6 +248,95 @@ export class Animal extends Phaser.GameObjects.Container {
     this.targetY   = pick.y + (Math.random() - 0.5) * 6;
     this.hasTarget = true;
     this.stateTimer = 8;
+  }
+
+  // ── Startle / flee ───────────────────────────────────────────────────────
+
+  /**
+   * Called when a tree is planted.  If within STARTLE_RANGE the animal
+   * panics: speed and flee distance scale with closeness (closer = faster/further).
+   */
+  startle(treeWorldX: number, treeWorldY: number): void {
+    const dx   = this.x - treeWorldX;
+    const dy   = this.y - treeWorldY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > STARTLE_RANGE || dist < 1) return;
+
+    const intensity = 1 - dist / STARTLE_RANGE; // 0 = edge, 1 = right on top
+    this.enterFlee(dx / dist, dy / dist, intensity);
+    this.showStress(intensity);
+  }
+
+  private enterFlee(dirX: number, dirY: number, intensity: number): void {
+    this.aiState = 'flee';
+    // Closer → faster and further
+    this.speed = 180 + intensity * 280;
+    const distance = 90 + intensity * 240;
+    this.targetX   = Phaser.Math.Clamp(this.x + dirX * distance, 0, WORLD_W);
+    this.targetY   = Phaser.Math.Clamp(this.y + dirY * distance, 0, WORLD_H);
+    this.hasTarget = true;
+    this.stateTimer = 10;
+    // Face away from tree
+    this.scaleX = dirX >= 0 ? 1 : -1;
+    this.gfx.y = 0;
+  }
+
+  private showStress(intensity: number): void {
+    // Clean up any existing stress graphic
+    if (this.stressTween) { this.stressTween.stop(); this.stressTween = undefined; }
+    if (this.stressGfx)   { this.stressGfx.destroy(); this.stressGfx = undefined; }
+
+    const g = this.scene.add.graphics();
+    this.stressGfx = g;
+    this.add(g);
+
+    // Position above + slightly right of centre (mirrors fine with scaleX)
+    g.x = 8;
+    g.y = -22;
+
+    // ── Sweat drops (classic anime teardrop: circle + downward triangle) ──
+    const drops: [number, number, number][] = [
+      [4,  0,   3.5],
+      [0,  -5,  2.8],
+      [8,  -8,  2.2],
+    ];
+    drops.forEach(([ox, oy, r]) => {
+      g.fillStyle(0x55aaff, 0.9);
+      g.fillCircle(ox, oy, r);
+      // Pointed tail below the circle
+      g.fillTriangle(ox - r * 0.7, oy + r * 0.4,
+                     ox + r * 0.7, oy + r * 0.4,
+                     ox,           oy + r * 1.8);
+    });
+
+    // ── Exclamation marks ("!!") ──
+    const excX = -7;
+    const excY = -4;
+    g.fillStyle(0xffdd00, 1);
+    // First "!"
+    g.fillRect(excX,      excY,      2.5, 8);   // bar
+    g.fillRect(excX,      excY + 10, 2.5, 2.5); // dot
+    // Second "!"
+    g.fillRect(excX + 5,  excY,      2.5, 8);
+    g.fillRect(excX + 5,  excY + 10, 2.5, 2.5);
+
+    // Hold fully visible for 2 s then fade over 5 s (longer hold for highly startled)
+    const holdMs = 1500 + intensity * 2000;
+    const fadeMs = 4500 + intensity * 1000;
+
+    this.stressTween = this.scene.tweens.add({
+      targets: g,
+      alpha: { from: 1, to: 0 },
+      duration: fadeMs,
+      delay: holdMs,
+      ease: 'Sine.easeIn',
+      onComplete: () => {
+        if (this.active) {
+          g.destroy();
+          this.stressGfx = undefined;
+        }
+      },
+    });
   }
 
   // ── Depth ────────────────────────────────────────────────────────────────
