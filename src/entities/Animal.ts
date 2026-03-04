@@ -256,15 +256,20 @@ export class Animal extends Phaser.GameObjects.Container {
    * Called when a tree is planted.  If within STARTLE_RANGE the animal
    * panics: speed and flee distance scale with closeness (closer = faster/further).
    */
-  startle(treeWorldX: number, treeWorldY: number): void {
+  /**
+   * Attempt to startle this animal.
+   * @returns intensity [0–1] if startled, -1 if out of range.
+   */
+  startle(treeWorldX: number, treeWorldY: number): number {
     const dx   = this.x - treeWorldX;
     const dy   = this.y - treeWorldY;
     const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > STARTLE_RANGE || dist < 1) return;
+    if (dist > STARTLE_RANGE || dist < 1) return -1;
 
     const intensity = 1 - dist / STARTLE_RANGE; // 0 = edge, 1 = right on top
     this.enterFlee(dx / dist, dy / dist, intensity);
     this.showStress(intensity);
+    return intensity;
   }
 
   private enterFlee(dirX: number, dirY: number, intensity: number): void {

@@ -23,6 +23,10 @@ export class MainScene extends Phaser.Scene {
   private minimap?: Minimap;
   private animalManager?: AnimalManager;
 
+  // Stress data is stashed from localStorage before animalManager exists
+  private savedStressEventCount    = 0;
+  private savedStressWeightedScore = 0;
+
   // ── UI references ─────────────────────────────────────────────────
   private scoreText?: Phaser.GameObjects.Text;
   private playerNameText?: Phaser.GameObjects.Text;
@@ -86,6 +90,7 @@ export class MainScene extends Phaser.Scene {
 
     this.animalManager = new AnimalManager(this);
     this.animalManager.sync(this.trees);
+    this.animalManager.loadStressData(this.savedStressEventCount, this.savedStressWeightedScore);
 
     this.time.addEvent({ delay: 1000, callback: this.tickTreeGrowth, callbackScope: this, loop: true });
     this.time.addEvent({ delay: 500,  callback: this.tickMinimap,    callbackScope: this, loop: true });
@@ -543,6 +548,34 @@ export class MainScene extends Phaser.Scene {
       this.infoPanel!.add(subText);
     });
 
+    // ── Wildlife disturbance section ─────────────────────────────────
+    const stress = this.animalManager?.getStressStats() ?? { eventCount: 0, weightedScore: 0 };
+    const stressY = PH / 2 - 100;
+
+    const stressBg = this.add.graphics();
+    stressBg.fillStyle(0x1a1000, 0.7);
+    stressBg.fillRoundedRect(-PW / 2 + 14, stressY - 6, PW - 28, 56, 8);
+    stressBg.lineStyle(1, 0x886600, 0.5);
+    stressBg.strokeRoundedRect(-PW / 2 + 14, stressY - 6, PW - 28, 56, 8);
+    this.infoPanel!.add(stressBg);
+
+    const stressTitle = this.add.text(-PW / 2 + 22, stressY + 4,
+      '🐾  Wildlife disturbance', {
+      fontSize: '13px', color: '#ffcc44', fontStyle: 'bold',
+    }).setOrigin(0, 0.5);
+    this.infoPanel!.add(stressTitle);
+
+    const evtLabel = stress.eventCount === 0
+      ? 'No animals startled yet — your forest is undisturbed 🌿'
+      : `${stress.eventCount} startle event${stress.eventCount === 1 ? '' : 's'}  ·  disturbance index: ${stress.weightedScore.toFixed(1)}  (higher = closer to planted trees)`;
+
+    const stressDetail = this.add.text(-PW / 2 + 22, stressY + 26,
+      evtLabel, {
+      fontSize: '11px', color: '#ccaa66',
+      wordWrap: { width: PW - 52 },
+    }).setOrigin(0, 0.5);
+    this.infoPanel!.add(stressDetail);
+
     // Sources note
     const sources = this.add.text(0, PH / 2 - 38,
       'Sources: IPCC, OurWorldInData, BBC Climate, Carbon Trust (estimates vary)', {
@@ -681,14 +714,21 @@ export class MainScene extends Phaser.Scene {
       tree.setAgeVisible(this.showAgeLabels);
       this.trees.push(tree);
     });
+
+    // Stashed until animalManager is created (see create())
+    this.savedStressEventCount    = state.animalStressEventCount    ?? 0;
+    this.savedStressWeightedScore = state.animalStressWeightedScore ?? 0;
   }
 
   private saveGameState(): void {
     if (!StorageManager.isAvailable()) return;
+    const stress = this.animalManager?.getStressStats();
     const state: GameState = {
       playerName: this.playerName,
       trees: this.trees.map(t => t.treeData),
       lastUpdated: Date.now(),
+      animalStressEventCount:    stress?.eventCount    ?? 0,
+      animalStressWeightedScore: stress?.weightedScore ?? 0,
     };
     StorageManager.save(state);
   }
