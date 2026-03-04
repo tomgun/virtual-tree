@@ -4,6 +4,8 @@ export interface GameState {
   playerName: string;
   trees: TreeData[];
   lastUpdated: number;
+  animalStressEventCount?: number;
+  animalStressWeightedScore?: number;
 }
 
 /**

@@ -11,9 +11,17 @@ const SPECIES: AnimalSpecies[] = ['mouse', 'ant', 'bug'];
  * Population = floor(treeCount / TREES_PER_ANIMAL).
  * Call sync() whenever the tree list changes, update() every frame.
  */
+export interface AnimalStressStats {
+  eventCount: number;    // total individual startle events
+  weightedScore: number; // sum of intensities (closer tree = higher contribution)
+}
+
 export class AnimalManager {
   private scene: Phaser.Scene;
   private animals: Animal[] = [];
+
+  private stressEventCount = 0;
+  private totalStressScore  = 0;
 
   // World bounds
   private readonly worldW = (GRID_COLS + GRID_ROWS) * (TILE_W / 2);
@@ -37,10 +45,26 @@ export class AnimalManager {
 
   /**
    * Startle all animals within range of a newly planted tree.
+   * Accumulates event count and weighted score for display in the impact panel.
    * Call this *after* sync() so newly spawned animals can also be startled.
    */
   onTreePlanted(treeWorldX: number, treeWorldY: number): void {
-    this.animals.forEach(a => a.startle(treeWorldX, treeWorldY));
+    this.animals.forEach(a => {
+      const intensity = a.startle(treeWorldX, treeWorldY);
+      if (intensity >= 0) {
+        this.stressEventCount++;
+        this.totalStressScore += intensity;
+      }
+    });
+  }
+
+  getStressStats(): AnimalStressStats {
+    return { eventCount: this.stressEventCount, weightedScore: this.totalStressScore };
+  }
+
+  loadStressData(eventCount: number, weightedScore: number): void {
+    this.stressEventCount = eventCount;
+    this.totalStressScore  = weightedScore;
   }
 
   /** Call every frame from MainScene.update(). */
