@@ -30,6 +30,7 @@ export class MainScene extends Phaser.Scene {
   // ── UI references ─────────────────────────────────────────────────
   private scoreText?: Phaser.GameObjects.Text;
   private playerNameText?: Phaser.GameObjects.Text;
+  private newGameBtn?: Phaser.GameObjects.Text;
   private instrText?: Phaser.GameObjects.Text;
   private helpBtn?: Phaser.GameObjects.Text;
   private nameInput?: Phaser.GameObjects.DOMElement;
@@ -83,10 +84,6 @@ export class MainScene extends Phaser.Scene {
     this.setupInput();
     this.createUI();
     this.createTreeSelector();
-
-    if (!this.playerName) {
-      this.time.delayedCall(400, () => this.showNameInput());
-    }
 
     this.animalManager = new AnimalManager(this);
     this.animalManager.sync(this.trees);
@@ -184,14 +181,16 @@ export class MainScene extends Phaser.Scene {
       Phaser.Input.Keyboard.KeyCodes.RIGHT,
     ]);
 
-    // Hover → tooltip for toolbar, pointer cursor for minimap / help btn
+    // Hover → tooltip for toolbar, pointer cursor for interactive UI
     this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
-      const inMinimap  = this.isInMinimap(ptr.x, ptr.y);
-      const inHelpBtn  = this.isInHelpBtn(ptr.x, ptr.y);
-      const btnIdx     = this.toolbarBtnAt(ptr.x, ptr.y);
+      const inMinimap    = this.isInMinimap(ptr.x, ptr.y);
+      const inHelpBtn    = this.isInHelpBtn(ptr.x, ptr.y);
+      const inPlayerName = this.isInPlayerName(ptr.x, ptr.y);
+      const inNewGame    = this.isInNewGameBtn(ptr.x, ptr.y);
+      const btnIdx       = this.toolbarBtnAt(ptr.x, ptr.y);
 
       this.game.canvas.style.cursor =
-        (inMinimap || inHelpBtn || btnIdx !== -1) ? 'pointer' : 'default';
+        (inMinimap || inHelpBtn || inPlayerName || inNewGame || btnIdx !== -1) ? 'pointer' : 'default';
 
       if (btnIdx !== -1) {
         const r = this.selectorRects[btnIdx];
@@ -208,6 +207,18 @@ export class MainScene extends Phaser.Scene {
         const ids = ['player-name-input', 'save-name-btn', 'skip-name-btn'];
         if (ids.some(id => document.getElementById(id)?.contains(el as Node))) return;
         this.savePlayerName(this.playerName || 'Player');
+      }
+
+      // Player name → open name editor
+      if (this.isInPlayerName(ptr.x, ptr.y)) {
+        this.showNameInput();
+        return;
+      }
+
+      // New game button
+      if (this.isInNewGameBtn(ptr.x, ptr.y)) {
+        this.confirmNewGame();
+        return;
       }
 
       // ? help button
@@ -258,6 +269,24 @@ export class MainScene extends Phaser.Scene {
     return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
   }
 
+  private isInPlayerName(px: number, py: number): boolean {
+    if (!this.playerNameText) return false;
+    const b = this.playerNameText.getBounds();
+    return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
+  }
+
+  private isInNewGameBtn(px: number, py: number): boolean {
+    if (!this.newGameBtn) return false;
+    const b = this.newGameBtn.getBounds();
+    return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
+  }
+
+  private confirmNewGame(): void {
+    if (!window.confirm('Start a new game?\nAll your trees and progress will be lost.')) return;
+    StorageManager.clear();
+    this.scene.restart();
+  }
+
   /** Returns toolbar button index (0-based) under screen point, or -1. */
   private toolbarBtnAt(px: number, py: number): number {
     return this.selectorRects.findIndex(r =>
@@ -278,11 +307,19 @@ export class MainScene extends Phaser.Scene {
     }).setScrollFactor(0).setDepth(2000);
     this.updateScoreDisplay();
 
-    // Player name
-    this.playerNameText = this.add.text(20, 72, `Player: ${this.playerName || '–'}`, {
-      fontSize: '18px', color: '#ffffff',
+    // Player name — clickable to edit
+    this.playerNameText = this.add.text(20, 72, '', {
+      fontSize: '16px', color: '#ffffff',
       backgroundColor: '#000000cc',
       padding: { x: 10, y: 5 },
+    }).setScrollFactor(0).setDepth(2000);
+    this.updatePlayerNameText();
+
+    // New game button
+    this.newGameBtn = this.add.text(20, 108, '↺  new game', {
+      fontSize: '13px', color: '#ff9999',
+      backgroundColor: '#220000bb',
+      padding: { x: 8, y: 4 },
     }).setScrollFactor(0).setDepth(2000);
 
     // ? help button (top-right)
@@ -298,7 +335,7 @@ export class MainScene extends Phaser.Scene {
       : `PROD: ${GrowthConfig.getGrowthDescription()}`;
     this.instrText = this.add.text(
       W - 20, 20 + (this.helpBtn?.height ?? 36) + 6,
-      `Click → plant tree\nArrows → move camera\nSpace → change name\n1-5 → select tree type\nA → toggle age labels\nI → CO₂ impact panel\n(${modeLabel})`,
+      `Click → plant tree\nArrows → move camera\nClick name → change name\n1-5 → select tree type\nA → toggle age labels\nI → CO₂ impact panel\n(${modeLabel})`,
       { fontSize: '14px', color: '#ffffff', backgroundColor: '#000000cc',
         padding: { x: 8, y: 6 }, align: 'right' },
     ).setOrigin(1, 0).setScrollFactor(0).setDepth(2000).setVisible(false);
@@ -585,7 +622,7 @@ export class MainScene extends Phaser.Scene {
 
     // Keyboard reference + close hint
     const closeHint = this.add.text(0, PH / 2 - 14,
-      'I  impact panel  ·  A  toggle ages  ·  Space  change name  ·  1-5  tree type  ·  Arrows  move', {
+      'I  impact panel  ·  A  toggle ages  ·  click name  ·  1-5  tree type  ·  Arrows  move', {
       fontSize: '10px', color: '#667766', align: 'center',
     }).setOrigin(0.5, 1);
     this.infoPanel.add(closeHint);
@@ -637,15 +674,15 @@ export class MainScene extends Phaser.Scene {
     inp?.focus();
     inp?.addEventListener('keydown', e => {
       if (e.key === 'Enter')  this.savePlayerName(inp.value);
-      if (e.key === 'Escape') this.savePlayerName(this.playerName || 'Player');
+      if (e.key === 'Escape') this.savePlayerName(this.playerName);
     });
     save?.addEventListener('click', () => this.savePlayerName(inp?.value ?? ''));
-    skip?.addEventListener('click', () => this.savePlayerName(this.playerName || 'Player'));
+    skip?.addEventListener('click', () => this.savePlayerName(this.playerName));
   }
 
   private savePlayerName(name: string): void {
-    this.playerName = name.trim() || 'Player';
-    this.playerNameText?.setText(`Player: ${this.playerName}`);
+    this.playerName = name.trim();
+    this.updatePlayerNameText();
     this.saveGameState();
     this.nameInput?.destroy();
     this.nameInput = undefined;
@@ -654,10 +691,20 @@ export class MainScene extends Phaser.Scene {
     this.game.canvas.focus();
   }
 
+  private updatePlayerNameText(): void {
+    if (!this.playerNameText) return;
+    if (this.playerName) {
+      this.playerNameText.setText(`✏  ${this.playerName}`);
+      this.playerNameText.setStyle({ color: '#ffffff' });
+    } else {
+      this.playerNameText.setText('✏  enter player name');
+      this.playerNameText.setStyle({ color: '#aabbaa' });
+    }
+  }
+
   // ── Tree placement ─────────────────────────────────────────────────
 
   private placeTree(gx: number, gy: number): void {
-    if (!this.playerName) { this.showNameInput(); return; }
 
     // Prevent stacking — one tree per grid cell
     if (this.trees.some(t => t.treeData.x === gx && t.treeData.y === gy)) return;
@@ -666,7 +713,7 @@ export class MainScene extends Phaser.Scene {
       id: `tree-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       x: gx, y: gy, age: 0,
       species: this.selectedSpecies,
-      playerName: this.playerName,
+      playerName: this.playerName || 'Anonymous',
       plantedAt: Date.now(),
     };
     const tree = new Tree(this, data);
