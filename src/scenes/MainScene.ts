@@ -206,7 +206,8 @@ export class MainScene extends Phaser.Scene {
         const el = document.elementFromPoint(ptr.x, ptr.y);
         const ids = ['player-name-input', 'save-name-btn', 'skip-name-btn'];
         if (ids.some(id => document.getElementById(id)?.contains(el as Node))) return;
-        this.savePlayerName(this.playerName || 'Player');
+        this.savePlayerName(this.playerName);
+        return; // don't fall through after closing the dialog
       }
 
       // Player name → open name editor
@@ -243,8 +244,6 @@ export class MainScene extends Phaser.Scene {
       // Close info panel on any click outside it
       if (this.infoPanelVisible) { this.toggleInfoPanel(); return; }
 
-      if (!this.playerName) { this.showNameInput(); return; }
-
       // Plant tree — ptr.worldX / ptr.worldY account for camera scroll
       const grid    = IsometricUtils.worldToGrid(ptr.worldX, ptr.worldY);
       const snapped = IsometricUtils.snapToGrid(grid.x, grid.y);
@@ -271,14 +270,15 @@ export class MainScene extends Phaser.Scene {
 
   private isInPlayerName(px: number, py: number): boolean {
     if (!this.playerNameText) return false;
-    const b = this.playerNameText.getBounds();
-    return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
+    // scrollFactor(0) + origin(0,0): object.x/y IS its screen position
+    const t = this.playerNameText;
+    return px >= t.x && px <= t.x + t.width && py >= t.y && py <= t.y + t.height;
   }
 
   private isInNewGameBtn(px: number, py: number): boolean {
     if (!this.newGameBtn) return false;
-    const b = this.newGameBtn.getBounds();
-    return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
+    const t = this.newGameBtn;
+    return px >= t.x && px <= t.x + t.width && py >= t.y && py <= t.y + t.height;
   }
 
   private confirmNewGame(): void {
