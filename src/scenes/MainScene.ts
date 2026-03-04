@@ -284,7 +284,7 @@ export class MainScene extends Phaser.Scene {
   private confirmNewGame(): void {
     if (!window.confirm('Start a new game?\nAll your trees and progress will be lost.')) return;
     StorageManager.clear();
-    this.scene.restart();
+    window.location.reload();
   }
 
   /** Returns toolbar button index (0-based) under screen point, or -1. */
