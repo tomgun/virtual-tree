@@ -33,7 +33,7 @@ export class MainScene extends Phaser.Scene {
   private newGameBtn?: Phaser.GameObjects.Text;
   private instrText?: Phaser.GameObjects.Text;
   private helpBtn?: Phaser.GameObjects.Text;
-  private nameInput?: Phaser.GameObjects.DOMElement;
+  private nameDialogEl?: HTMLElement; // plain DOM overlay, no Phaser add.dom()
   private nameInputActive = false;
   private instrVisible = false;
 
@@ -203,11 +203,9 @@ export class MainScene extends Phaser.Scene {
     // Click → help toggle / minimap navigate / toolbar select / plant tree
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       if (this.nameInputActive) {
-        const el = document.elementFromPoint(ptr.x, ptr.y);
-        const ids = ['player-name-input', 'save-name-btn', 'skip-name-btn'];
-        if (ids.some(id => document.getElementById(id)?.contains(el as Node))) return;
-        this.savePlayerName(this.playerName);
-        return; // don't fall through after closing the dialog
+        // Dialog is handled entirely in DOM; Phaser clicks pass through —
+        // just swallow them so we don't plant trees while the dialog is open.
+        return;
       }
 
       // Player name → open name editor
@@ -646,46 +644,72 @@ export class MainScene extends Phaser.Scene {
     if (this.nameInputActive) return;
     this.nameInputActive = true;
 
-    const html = `
-      <div style="background:rgba(0,0,0,.9);padding:20px;border-radius:10px;
-                  text-align:center;border:2px solid #3a6830;">
-        <p style="color:#fff;font-size:17px;margin-bottom:10px;">Enter your name:</p>
-        <input id="player-name-input" type="text"
-          style="padding:9px;font-size:15px;width:190px;border-radius:5px;border:1px solid #ccc;"
-          value="${this.playerName}" placeholder="Player Name" />
+    // Build a fixed-position overlay entirely in plain DOM — no Phaser add.dom()
+    // so there are no canvas-coordinate issues.
+    const overlay = document.createElement('div');
+    overlay.id = 'name-dialog-overlay';
+    overlay.style.cssText = [
+      'position:fixed', 'inset:0', 'display:flex',
+      'align-items:center', 'justify-content:center',
+      'background:rgba(0,0,0,0.55)', 'z-index:9999',
+    ].join(';');
+
+    overlay.innerHTML = `
+      <div style="background:#0d2b0d;padding:28px 32px;border-radius:12px;
+                  text-align:center;border:2px solid #3a6830;min-width:260px;">
+        <p style="color:#88ff88;font-size:17px;margin:0 0 14px;font-weight:bold;">
+          Enter your name
+        </p>
+        <input id="name-dlg-input" type="text"
+          style="padding:9px 12px;font-size:15px;width:200px;border-radius:6px;
+                 border:1px solid #3a6830;background:#112211;color:#fff;outline:none;"
+          value="${this.playerName}" placeholder="Player name" />
         <br><br>
-        <button id="save-name-btn"
-          style="padding:9px 18px;font-size:15px;background:#3a6830;color:#fff;
-                 border:none;border-radius:5px;cursor:pointer;margin-right:8px;">Save</button>
-        <button id="skip-name-btn"
-          style="padding:9px 18px;font-size:15px;background:#555;color:#fff;
-                 border:none;border-radius:5px;cursor:pointer;">Skip</button>
+        <button id="name-dlg-save"
+          style="padding:9px 20px;font-size:14px;background:#3a6830;color:#fff;
+                 border:none;border-radius:6px;cursor:pointer;margin-right:8px;">
+          Save
+        </button>
+        <button id="name-dlg-skip"
+          style="padding:9px 20px;font-size:14px;background:#444;color:#ccc;
+                 border:none;border-radius:6px;cursor:pointer;">
+          Skip
+        </button>
       </div>`;
 
-    this.nameInput = this.add.dom(
-      this.cameras.main.width / 2, this.cameras.main.height / 2,
-      'div', null, html,
-    ).setScrollFactor(0).setDepth(3000);
+    document.body.appendChild(overlay);
+    this.nameDialogEl = overlay;
 
-    const inp  = document.getElementById('player-name-input') as HTMLInputElement;
-    const save = document.getElementById('save-name-btn') as HTMLButtonElement;
-    const skip = document.getElementById('skip-name-btn') as HTMLButtonElement;
+    const inp  = document.getElementById('name-dlg-input') as HTMLInputElement;
+    const save = document.getElementById('name-dlg-save')  as HTMLButtonElement;
+    const skip = document.getElementById('name-dlg-skip')  as HTMLButtonElement;
 
+    // Select all existing text so user can type immediately
     inp?.focus();
+    inp?.select();
+
+    const done = (value: string) => this.savePlayerName(value);
+
     inp?.addEventListener('keydown', e => {
-      if (e.key === 'Enter')  this.savePlayerName(inp.value);
-      if (e.key === 'Escape') this.savePlayerName(this.playerName);
+      e.stopPropagation(); // don't let Phaser intercept keystrokes
+      if (e.key === 'Enter')  done(inp.value);
+      if (e.key === 'Escape') done(this.playerName);
     });
-    save?.addEventListener('click', () => this.savePlayerName(inp?.value ?? ''));
-    skip?.addEventListener('click', () => this.savePlayerName(this.playerName));
+    save?.addEventListener('click', () => done(inp?.value ?? ''));
+    skip?.addEventListener('click', () => done(this.playerName));
+
+    // Click on backdrop (outside the card) closes dialog
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) done(this.playerName);
+    });
   }
 
   private savePlayerName(name: string): void {
     this.playerName = name.trim();
     this.updatePlayerNameText();
     this.saveGameState();
-    this.nameInput?.destroy();
-    this.nameInput = undefined;
+    this.nameDialogEl?.remove();
+    this.nameDialogEl = undefined;
     this.nameInputActive = false;
     // Return focus to canvas so keyboard shortcuts work immediately after closing
     this.game.canvas.focus();
