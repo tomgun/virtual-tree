@@ -640,6 +640,7 @@ export class MainScene extends Phaser.Scene {
     tree.setAgeVisible(this.showAgeLabels);
     this.trees.push(tree);
     this.animalManager?.sync(this.trees);
+    this.animalManager?.onTreePlanted(tree.x, tree.y);
     this.saveGameState();
     this.updateScoreDisplay();
   }
